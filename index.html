@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>Staff Recipe Book</title>
+<title>Ini Itu Recipe Book</title>
 <style>
   :root{
     --bg:#faf6f1;
@@ -11,16 +11,19 @@
     --ink:#2a221c;
     --ink-dim:#6b6157;
     --line:#e8e0d6;
-    --accent:#b5601f;
+    --accent:#804000;
     --accent-ink:#ffffff;
-    --chip-bg:#f0e8dd;
-    --chip-active-bg:#2a221c;
+    --chip-bg:#f2ece2;
+    --chip-active-bg:#804000;
     --chip-active-ink:#ffffff;
-    --tag-bg:#fdeee0;
-    --tag-ink:#8a4a15;
+    --secondary:#808000;
+    --tag-bg:#f1f1de;
+    --tag-ink:#5c5900;
+    --info-bg:#e7f0dd;
+    --info-ink:#345c00;
     --error-bg:#fdecec;
     --error-ink:#8a2a1f;
-    --toggle-bg:#f0e8dd;
+    --toggle-bg:#f2ece2;
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
@@ -31,16 +34,19 @@
       --ink:#f1ece5;
       --ink-dim:#a89c8e;
       --line:#3a342c;
-      --accent:#e08a3e;
+      --accent:#d98a3d;
       --accent-ink:#1b1815;
-      --chip-bg:#332c24;
-      --chip-active-bg:#e08a3e;
+      --chip-bg:#362a1c;
+      --chip-active-bg:#d98a3d;
       --chip-active-ink:#1b1815;
-      --tag-bg:#3a2c1c;
-      --tag-ink:#e0a56a;
+      --secondary:#c9c15a;
+      --tag-bg:#33321a;
+      --tag-ink:#d6cf70;
+      --info-bg:#1f3311;
+      --info-ink:#8fd15a;
       --error-bg:#3a201c;
       --error-ink:#e08a7e;
-      --toggle-bg:#332c24;
+      --toggle-bg:#362a1c;
     }
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -60,8 +66,10 @@
     padding:calc(12px + var(--safe-top)) 16px 10px;
     border-bottom:1px solid var(--line);
   }
-  .title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-  .title-row h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-0.01em;}
+  .title-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .brand{display:flex;align-items:center;gap:8px;min-width:0;}
+  .brand .logo{flex:0 0 auto;width:32px;height:32px;border-radius:50%;object-fit:cover;}
+  .title-row h1{font-size:17px;margin:0;font-weight:700;letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .refresh-btn{
     display:flex;align-items:center;gap:6px;
     background:var(--surface);border:1px solid var(--line);color:var(--ink-dim);
@@ -113,7 +121,7 @@
     padding:10px 12px;border-radius:10px;margin-bottom:12px;
     font-size:13px;line-height:1.4;
   }
-  .banner.cache{background:var(--tag-bg);color:var(--tag-ink);}
+  .banner.cache{background:var(--info-bg);color:var(--info-ink);}
   .banner.error{background:var(--error-bg);color:var(--error-ink);}
   .banner button{
     margin-left:auto;flex:0 0 auto;
@@ -144,8 +152,8 @@
   .drink-head .name-wrap{flex:1;min-width:0;}
   .drink-head .drink-name{font-size:16px;font-weight:700;display:block;}
   .drink-head .cat-badge{font-size:12px;color:var(--ink-dim);display:block;margin-top:1px;}
-  .drink-head .chevron{flex:0 0 auto;width:20px;height:20px;color:var(--ink-dim);transition:transform 0.15s ease;}
-  .drink-card.open .chevron{transform:rotate(180deg);}
+  .drink-head .chevron{flex:0 0 auto;width:20px;height:20px;color:var(--ink-dim);transition:transform 0.15s ease,color 0.15s ease;}
+  .drink-card.open .chevron{transform:rotate(180deg);color:var(--accent);}
   .drink-head:active{background:var(--chip-bg);}
 
   .notes-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
@@ -159,7 +167,7 @@
     flex:1;border:none;background:transparent;color:var(--ink-dim);
     font-size:14px;font-weight:700;padding:9px 0;border-radius:8px;min-height:38px;
   }
-  .variant-toggle button.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,0.08);}
+  .variant-toggle button.active{background:var(--surface);color:var(--accent);box-shadow:0 1px 2px rgba(0,0,0,0.08);}
 
   .ingredient-row{
     display:flex;align-items:baseline;justify-content:space-between;gap:12px;
@@ -183,7 +191,9 @@
 <div id="app">
   <header>
     <div class="title-row">
-      <h1>Recipe Book</h1>
+      <div class="brand">
+        <h1>Ini Itu Recipe Book</h1>
+      </div>
       <button class="refresh-btn" id="refreshBtn" type="button" aria-label="Refresh recipes">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
         <span id="refreshLabel">Refresh</span>
