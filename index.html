@@ -52,13 +52,31 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;height:100%;}
   body{
+    position:relative;
     background:var(--bg);
     color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
     -webkit-font-smoothing:antialiased;
     overscroll-behavior-y:contain;
   }
-  #app{max-width:640px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;}
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    background-color:var(--ink);
+    opacity:0.05;
+    -webkit-mask-image:url("assets/logo-mask.png");
+    mask-image:url("assets/logo-mask.png");
+    -webkit-mask-repeat:repeat;
+    mask-repeat:repeat;
+    -webkit-mask-size:80px 80px;
+    mask-size:80px 80px;
+    -webkit-mask-position:center;
+    mask-position:center;
+  }
+  #app{position:relative;z-index:1;max-width:640px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;}
 
   header{
     position:sticky;top:0;z-index:20;
@@ -68,7 +86,15 @@
   }
   .title-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
   .brand{display:flex;align-items:center;gap:8px;min-width:0;}
-  .brand .logo{flex:0 0 auto;width:32px;height:32px;border-radius:50%;object-fit:cover;}
+  .brand .logo{
+    flex:0 0 auto;width:30px;height:30px;
+    background-color:var(--ink);
+    -webkit-mask-image:url("assets/logo-mask.png");
+    mask-image:url("assets/logo-mask.png");
+    -webkit-mask-size:contain;mask-size:contain;
+    -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+    -webkit-mask-position:center;mask-position:center;
+  }
   .title-row h1{font-size:17px;margin:0;font-weight:700;letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .refresh-btn{
     display:flex;align-items:center;gap:6px;
@@ -192,6 +218,7 @@
   <header>
     <div class="title-row">
       <div class="brand">
+        <span class="logo" role="img" aria-label="Ini Itu logo"></span>
         <h1>Ini Itu Recipe Book</h1>
       </div>
       <button class="refresh-btn" id="refreshBtn" type="button" aria-label="Refresh recipes">
@@ -221,7 +248,7 @@
 
   // ---- config -------------------------------------------------------
   var SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoruZJ0wrpB7rcrYtYkWg81SlF5K4dd2W5c5SyaRfYwrtijzM6weOoJcwWf7wk5p197UKwcEirPWpk/pub?output=csv";
-  var CATEGORY_ORDER = ["Black", "Filter", "White", "Matcha", "Chocolate", "Others"];
+  var CATEGORY_ORDER = ["Black", "White", "Matcha", "Chocolate", "Others"];
   var LS_KEY_CSV = "recipeBook.csvText";
   var LS_KEY_TS = "recipeBook.fetchedAt";
 
