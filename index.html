@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Staff Recipe Book</title>
+<style>
+  :root{
+    --bg:#faf6f1;
+    --surface:#ffffff;
+    --ink:#2a221c;
+    --ink-dim:#6b6157;
+    --line:#e8e0d6;
+    --accent:#b5601f;
+    --accent-ink:#ffffff;
+    --chip-bg:#f0e8dd;
+    --chip-active-bg:#2a221c;
+    --chip-active-ink:#ffffff;
+    --tag-bg:#fdeee0;
+    --tag-ink:#8a4a15;
+    --error-bg:#fdecec;
+    --error-ink:#8a2a1f;
+    --toggle-bg:#f0e8dd;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1b1815;
+      --surface:#25211d;
+      --ink:#f1ece5;
+      --ink-dim:#a89c8e;
+      --line:#3a342c;
+      --accent:#e08a3e;
+      --accent-ink:#1b1815;
+      --chip-bg:#332c24;
+      --chip-active-bg:#e08a3e;
+      --chip-active-ink:#1b1815;
+      --tag-bg:#3a2c1c;
+      --tag-ink:#e0a56a;
+      --error-bg:#3a201c;
+      --error-ink:#e08a7e;
+      --toggle-bg:#332c24;
+    }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior-y:contain;
+  }
+  #app{max-width:640px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;}
+
+  header{
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);
+    padding:calc(12px + var(--safe-top)) 16px 10px;
+    border-bottom:1px solid var(--line);
+  }
+  .title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .title-row h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-0.01em;}
+  .refresh-btn{
+    display:flex;align-items:center;gap:6px;
+    background:var(--surface);border:1px solid var(--line);color:var(--ink-dim);
+    border-radius:999px;padding:8px 12px;font-size:13px;font-weight:600;
+    min-height:36px;
+  }
+  .refresh-btn:active{transform:scale(0.96);}
+  .refresh-btn svg{width:14px;height:14px;}
+  .refresh-btn.spinning svg{animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .search-wrap{position:relative;margin-bottom:10px;}
+  .search-wrap input{
+    width:100%;
+    font-size:16px;
+    padding:12px 14px 12px 38px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink);
+    min-height:46px;
+  }
+  .search-wrap input:focus{outline:2px solid var(--accent);outline-offset:-1px;}
+  .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--ink-dim);pointer-events:none;}
+  .search-clear{
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    background:var(--chip-bg);border:none;border-radius:999px;
+    width:28px;height:28px;color:var(--ink-dim);font-size:16px;line-height:1;
+    display:none;align-items:center;justify-content:center;
+  }
+  .search-wrap.has-text .search-clear{display:flex;}
+
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;}
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:0 0 auto;
+    background:var(--chip-bg);color:var(--ink);
+    border:none;border-radius:999px;
+    padding:9px 16px;font-size:14px;font-weight:600;
+    white-space:nowrap;min-height:38px;
+  }
+  .chip.active{background:var(--chip-active-bg);color:var(--chip-active-ink);}
+  .chip:active{transform:scale(0.96);}
+
+  main{flex:1;padding:12px 16px calc(24px + var(--safe-bottom));}
+
+  .banner{
+    display:flex;align-items:flex-start;gap:10px;
+    padding:10px 12px;border-radius:10px;margin-bottom:12px;
+    font-size:13px;line-height:1.4;
+  }
+  .banner.cache{background:var(--tag-bg);color:var(--tag-ink);}
+  .banner.error{background:var(--error-bg);color:var(--error-ink);}
+  .banner button{
+    margin-left:auto;flex:0 0 auto;
+    background:transparent;border:1px solid currentColor;color:inherit;
+    border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;
+  }
+
+  .state-block{padding:48px 16px;text-align:center;color:var(--ink-dim);}
+  .state-block .big-icon{font-size:36px;margin-bottom:10px;}
+  .state-block h2{font-size:16px;color:var(--ink);margin:0 0 6px;}
+  .state-block p{font-size:14px;margin:0 0 16px;line-height:1.5;}
+  .state-block button{
+    background:var(--accent);color:var(--accent-ink);border:none;
+    border-radius:10px;padding:12px 20px;font-size:15px;font-weight:700;min-height:44px;
+  }
+
+  .section-label{font-size:12px;font-weight:700;color:var(--ink-dim);text-transform:uppercase;letter-spacing:0.04em;margin:4px 2px 8px;}
+
+  .drink-list{display:flex;flex-direction:column;gap:10px;}
+  .drink-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  }
+  .drink-head{
+    width:100%;display:flex;align-items:center;gap:10px;
+    padding:14px 14px;background:transparent;border:none;text-align:left;
+    min-height:56px;color:var(--ink);
+  }
+  .drink-head .name-wrap{flex:1;min-width:0;}
+  .drink-head .drink-name{font-size:16px;font-weight:700;display:block;}
+  .drink-head .cat-badge{font-size:12px;color:var(--ink-dim);display:block;margin-top:1px;}
+  .drink-head .chevron{flex:0 0 auto;width:20px;height:20px;color:var(--ink-dim);transition:transform 0.15s ease;}
+  .drink-card.open .chevron{transform:rotate(180deg);}
+  .drink-head:active{background:var(--chip-bg);}
+
+  .notes-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+  .notes-tags .tag{background:var(--tag-bg);color:var(--tag-ink);font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;}
+
+  .drink-body{border-top:1px solid var(--line);padding:14px;display:none;}
+  .drink-card.open .drink-body{display:block;}
+
+  .variant-toggle{display:flex;background:var(--toggle-bg);border-radius:10px;padding:3px;margin-bottom:14px;}
+  .variant-toggle button{
+    flex:1;border:none;background:transparent;color:var(--ink-dim);
+    font-size:14px;font-weight:700;padding:9px 0;border-radius:8px;min-height:38px;
+  }
+  .variant-toggle button.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,0.08);}
+
+  .ingredient-row{
+    display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+    padding:10px 0;border-bottom:1px solid var(--line);
+  }
+  .ingredient-row:last-child{border-bottom:none;}
+  .ingredient-row .ing-name{font-size:15px;font-weight:600;flex:1;min-width:0;}
+  .ingredient-row .ing-note{display:block;font-size:12px;color:var(--ink-dim);font-weight:400;margin-top:2px;}
+  .ingredient-row .ing-amount{font-size:15px;color:var(--ink-dim);white-space:nowrap;flex:0 0 auto;}
+
+  .selector-note{
+    background:var(--tag-bg);color:var(--tag-ink);
+    padding:12px;border-radius:10px;font-size:14px;line-height:1.5;
+  }
+  .empty-note{color:var(--ink-dim);font-size:14px;font-style:italic;padding:4px 0;}
+
+  .no-results{text-align:center;color:var(--ink-dim);padding:40px 16px;font-size:14px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="title-row">
+      <h1>Recipe Book</h1>
+      <button class="refresh-btn" id="refreshBtn" type="button" aria-label="Refresh recipes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+        <span id="refreshLabel">Refresh</span>
+      </button>
+    </div>
+    <div class="search-wrap" id="searchWrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="searchInput" type="search" inputmode="search" placeholder="Search a drink…" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="search-clear" id="searchClear" type="button" aria-label="Clear search">✕</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </header>
+  <main id="main">
+    <div class="state-block" id="loadingState">
+      <div class="big-icon">☕</div>
+      <h2>Loading recipes…</h2>
+      <p>Fetching the latest sheet.</p>
+    </div>
+  </main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- config -------------------------------------------------------
+  var SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoruZJ0wrpB7rcrYtYkWg81SlF5K4dd2W5c5SyaRfYwrtijzM6weOoJcwWf7wk5p197UKwcEirPWpk/pub?output=csv";
+  var CATEGORY_ORDER = ["Black", "Filter", "White", "Matcha", "Chocolate", "Others"];
+  var LS_KEY_CSV = "recipeBook.csvText";
+  var LS_KEY_TS = "recipeBook.fetchedAt";
+
+  // Add-ons sheet is not available yet (see build spec). Once it exists,
+  // fetch/parse it here and have buildDrinkModel() attach an `addons`
+  // array per drink; renderDrinkBody() already has a clear slot below
+  // (search "ADD-ONS SLOT") to render it without touching anything else.
+
+  // ---- state ----------------------------------------------------------
+  var state = {
+    drinks: [],           // flat list: {category, name, variants: {Hot:[...], Cold:[...], _: [...]}, hasVariants, notes: [drink-level notes]}
+    byCategory: {},        // category -> [drink,...]
+    categories: [],
+    activeCategory: null,
+    searchTerm: "",
+    openDrinkKey: null,
+    selectedVariant: {}     // drinkKey -> "Hot"|"Cold"
+  };
+
+  var elMain = document.getElementById("main");
+  var elChips = document.getElementById("chips");
+  var elSearchInput = document.getElementById("searchInput");
+  var elSearchWrap = document.getElementById("searchWrap");
+  var elSearchClear = document.getElementById("searchClear");
+  var elRefreshBtn = document.getElementById("refreshBtn");
+  var elRefreshLabel = document.getElementById("refreshLabel");
+
+  // ---- CSV parsing (RFC4180-ish: handles quoted fields with commas) ---
+  function parseCSV(text){
+    var rows = [];
+    var row = [];
+    var field = "";
+    var inQuotes = false;
+    for (var i = 0; i < text.length; i++){
+      var c = text[i];
+      if (inQuotes){
+        if (c === '"'){
+          if (text[i+1] === '"'){ field += '"'; i++; }
+          else { inQuotes = false; }
+        } else {
+          field += c;
+        }
+      } else {
+        if (c === '"'){ inQuotes = true; }
+        else if (c === ','){ row.push(field); field = ""; }
+        else if (c === '\r'){ /* skip */ }
+        else if (c === '\n'){ row.push(field); rows.push(row); row = []; field = ""; }
+        else { field += c; }
+      }
+    }
+    if (field.length > 0 || row.length > 0){ row.push(field); rows.push(row); }
+    return rows.filter(function(r){ return r.length > 1 || (r[0] && r[0].trim() !== ""); });
+  }
+
+  function csvToObjects(text){
+    var rows = parseCSV(text);
+    if (!rows.length) return [];
+    var headers = rows[0].map(function(h){ return h.trim(); });
+    var out = [];
+    for (var i = 1; i < rows.length; i++){
+      var r = rows[i];
+      var obj = {};
+      var allEmpty = true;
+      for (var j = 0; j < headers.length; j++){
+        var val = (r[j] || "").trim();
+        if (val !== "") allEmpty = false;
+        obj[headers[j]] = val;
+      }
+      if (!allEmpty) out.push(obj);
+    }
+    return out;
+  }
+
+  // ---- build drink model from flat rows --------------------------------
+  function buildDrinkModel(rows){
+    var order = [];       // preserve first-seen drink order within category
+    var map = {};          // key "category||name" -> drink object
+
+    rows.forEach(function(r){
+      if (!r.category || !r.drink_name) return; // skip malformed/blank rows
+      var key = r.category + "||" + r.drink_name;
+      var drink = map[key];
+      if (!drink){
+        drink = {
+          key: key,
+          category: r.category,
+          name: r.drink_name,
+          variantOrder: [],       // order variants first appear, e.g. ["Cold","Hot"]
+          variants: {},            // variant -> [{ingredient,amount,unit,notes}]
+          notes: []                 // drink-level notes (rows with no ingredient)
+        };
+        map[key] = drink;
+        order.push(key);
+      }
+
+      var variant = r.variant || "_"; // "_" = no-variant bucket
+      if (!drink.variants[variant]){
+        drink.variants[variant] = [];
+        drink.variantOrder.push(variant);
+      }
+
+      var hasIngredient = r.ingredient && r.ingredient.trim() !== "";
+      if (hasIngredient){
+        var ing = { ingredient: r.ingredient, amount: r.amount, unit: r.unit, notes: r.notes };
+        // dedupe identical ingredient rows within the same variant bucket
+        var dup = drink.variants[variant].some(function(existing){
+          return existing.ingredient === ing.ingredient &&
+                 existing.amount === ing.amount &&
+                 existing.unit === ing.unit &&
+                 existing.notes === ing.notes;
+        });
+        if (!dup) drink.variants[variant].push(ing);
+      } else if (r.notes && r.notes.trim() !== ""){
+        // no ingredient but has a note -> drink-level note (e.g. "brewed in-house", "No fix recipe")
+        if (drink.notes.indexOf(r.notes) === -1) drink.notes.push(r.notes);
+      }
+    });
+
+    return order.map(function(k){ return map[k]; });
+  }
+
+  // ---- rendering --------------------------------------------------------
+  function escapeHtml(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function renderChips(){
+    var html = state.categories.map(function(cat){
+      var active = (!state.searchTerm && cat === state.activeCategory) ? " active" : "";
+      return '<button type="button" class="chip' + active + '" data-cat="' + escapeHtml(cat) + '">' + escapeHtml(cat) + '</button>';
+    }).join("");
+    elChips.innerHTML = html;
+  }
+
+  function ingredientLine(ing){
+    var amountText = "";
+    if (ing.amount && ing.amount.trim() !== ""){
+      amountText = escapeHtml(ing.amount) + (ing.unit ? " " + escapeHtml(ing.unit) : "");
+    }
+    var noteHtml = ing.notes && ing.notes.trim() !== "" ? '<span class="ing-note">' + escapeHtml(ing.notes) + '</span>' : "";
+    return '<div class="ingredient-row">' +
+             '<span class="ing-name">' + escapeHtml(ing.ingredient) + noteHtml + '</span>' +
+             (amountText ? '<span class="ing-amount">' + amountText + '</span>' : '') +
+           '</div>';
+  }
+
+  function renderDrinkBody(drink){
+    var variants = drink.variantOrder.filter(function(v){ return v !== "_"; });
+    var hasToggle = variants.length > 1;
+    var hasDrinkNotes = drink.notes.length > 0;
+    var html = "";
+
+    if (hasToggle){
+      var current = state.selectedVariant[drink.key] || variants[0];
+      html += '<div class="variant-toggle" data-drink="' + escapeHtml(drink.key) + '">';
+      variants.forEach(function(v){
+        html += '<button type="button" data-variant="' + escapeHtml(v) + '" class="' + (v === current ? "active" : "") + '">' + escapeHtml(v) + '</button>';
+      });
+      html += '</div>';
+      html += renderIngredientBlock(drink.variants[current] || [], hasDrinkNotes);
+    } else if (variants.length === 1){
+      html += renderIngredientBlock(drink.variants[variants[0]] || [], hasDrinkNotes);
+    } else {
+      html += renderIngredientBlock(drink.variants["_"] || [], hasDrinkNotes);
+    }
+
+    // ADD-ONS SLOT: once the add-ons sheet is wired up, append its section
+    // here (e.g. if (drink.addons && drink.addons.length) html += renderAddonsBlock(drink.addons)).
+
+    return html;
+  }
+
+  function renderIngredientBlock(list, hasDrinkNotes){
+    if (!list || !list.length){
+      return hasDrinkNotes
+        ? '<div class="empty-note">No fixed recipe — see note above.</div>'
+        : '<div class="empty-note">No recipe details listed for this drink yet — check with a supervisor.</div>';
+    }
+    // "selector" style rows: a single ingredient-less entry shouldn't happen here since
+    // no-ingredient rows are captured as drink notes, so this is always real ingredients.
+    return list.map(ingredientLine).join("");
+  }
+
+  function renderDrinkCard(drink, opts){
+    opts = opts || {};
+    var isOpen = state.openDrinkKey === drink.key;
+    var tagsHtml = drink.notes.length
+      ? '<div class="notes-tags">' + drink.notes.map(function(n){ return '<span class="tag">' + escapeHtml(n) + '</span>'; }).join("") + '</div>'
+      : "";
+    var catBadge = opts.showCategory ? '<span class="cat-badge">' + escapeHtml(drink.category) + '</span>' : "";
+
+    return '<div class="drink-card' + (isOpen ? " open" : "") + '" data-drink="' + escapeHtml(drink.key) + '">' +
+      '<button type="button" class="drink-head" data-toggle="' + escapeHtml(drink.key) + '">' +
+        '<span class="name-wrap">' +
+          '<span class="drink-name">' + escapeHtml(drink.name) + '</span>' +
+          catBadge +
+          tagsHtml +
+        '</span>' +
+        '<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>' +
+      '</button>' +
+      (isOpen ? '<div class="drink-body">' + renderDrinkBody(drink) + '</div>' : '') +
+    '</div>';
+  }
+
+  function renderList(){
+    var listHtml, labelHtml = "";
+    if (state.searchTerm){
+      var term = state.searchTerm.toLowerCase();
+      var matches = state.drinks.filter(function(d){ return d.name.toLowerCase().indexOf(term) !== -1; });
+      labelHtml = '<div class="section-label">' + matches.length + ' result' + (matches.length === 1 ? "" : "s") + ' for "' + escapeHtml(state.searchTerm) + '"</div>';
+      listHtml = matches.length
+        ? matches.map(function(d){ return renderDrinkCard(d, { showCategory: true }); }).join("")
+        : '<div class="no-results">No drinks match that search.</div>';
+    } else {
+      var catDrinks = state.byCategory[state.activeCategory] || [];
+      listHtml = catDrinks.map(function(d){ return renderDrinkCard(d); }).join("");
+    }
+    return labelHtml + '<div class="drink-list">' + listHtml + '</div>';
+  }
+
+  function renderBanner(){
+    if (state.bannerMode === "cache"){
+      var when = state.cacheTimestamp ? new Date(state.cacheTimestamp).toLocaleString() : "earlier";
+      return '<div class="banner cache">' +
+        '<span>Couldn’t reach the sheet — showing recipes saved from ' + escapeHtml(when) + '.</span>' +
+        '<button type="button" id="retryFromBanner">Retry</button>' +
+      '</div>';
+    }
+    return "";
+  }
+
+  function renderApp(){
+    renderChips();
+    elMain.innerHTML = renderBanner() + renderList();
+  }
+
+  function renderFatalError(){
+    elMain.innerHTML =
+      '<div class="state-block">' +
+        '<div class="big-icon">⚠️</div>' +
+        '<h2>Couldn’t load recipes</h2>' +
+        '<p>No internet connection and no saved copy on this device yet. Check your wifi and try again.</p>' +
+        '<button type="button" id="retryFromError">Retry</button>' +
+      '</div>';
+  }
+
+  // ---- data loading -------------------------------------------------------
+  function applyRows(rows, opts){
+    opts = opts || {};
+    state.drinks = buildDrinkModel(rows);
+    state.byCategory = {};
+    state.drinks.forEach(function(d){
+      if (!state.byCategory[d.category]) state.byCategory[d.category] = [];
+      state.byCategory[d.category].push(d);
+    });
+    var seen = {};
+    state.categories = [];
+    CATEGORY_ORDER.forEach(function(c){
+      if (state.byCategory[c] && !seen[c]){ state.categories.push(c); seen[c] = true; }
+    });
+    Object.keys(state.byCategory).forEach(function(c){
+      if (!seen[c]){ state.categories.push(c); seen[c] = true; }
+    });
+    if (!state.activeCategory || state.categories.indexOf(state.activeCategory) === -1){
+      state.activeCategory = state.categories[0] || null;
+    }
+    state.bannerMode = opts.fromCache ? "cache" : null;
+    state.cacheTimestamp = opts.cacheTimestamp || null;
+    renderApp();
+  }
+
+  function fetchLive(isManualRefresh){
+    if (isManualRefresh){
+      elRefreshBtn.classList.add("spinning");
+      elRefreshLabel.textContent = "Refreshing…";
+    }
+    return fetch(SHEET_CSV_URL, { cache: "no-store" })
+      .then(function(res){
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.text();
+      })
+      .then(function(text){
+        if (!text || text.indexOf(",") === -1) throw new Error("Unexpected response");
+        var rows = csvToObjects(text);
+        var ts = Date.now();
+        try {
+          localStorage.setItem(LS_KEY_CSV, text);
+          localStorage.setItem(LS_KEY_TS, String(ts));
+        } catch (e) { /* storage unavailable, ignore */ }
+        applyRows(rows, { fromCache: false });
+        return true;
+      })
+      .catch(function(err){
+        if (isManualRefresh){
+          // keep whatever's on screen; just tell the user the refresh failed
+          var existing = elMain.querySelector(".banner");
+          if (!existing){
+            elMain.insertAdjacentHTML("afterbegin", '<div class="banner error"><span>Refresh failed — still showing the last loaded data.</span></div>');
+          }
+        } else {
+          loadFromCacheOrFail();
+        }
+        return false;
+      })
+      .finally(function(){
+        if (isManualRefresh){
+          elRefreshBtn.classList.remove("spinning");
+          elRefreshLabel.textContent = "Refresh";
+        }
+      });
+  }
+
+  function loadFromCacheOrFail(){
+    var cached;
+    try { cached = localStorage.getItem(LS_KEY_CSV); } catch (e) { cached = null; }
+    if (cached){
+      var ts = null;
+      try { ts = parseInt(localStorage.getItem(LS_KEY_TS), 10); } catch (e) {}
+      var rows = csvToObjects(cached);
+      applyRows(rows, { fromCache: true, cacheTimestamp: ts });
+    } else {
+      renderFatalError();
+    }
+  }
+
+  // ---- events ---------------------------------------------------------
+  elChips.addEventListener("click", function(e){
+    var btn = e.target.closest(".chip");
+    if (!btn) return;
+    state.activeCategory = btn.getAttribute("data-cat");
+    state.searchTerm = "";
+    elSearchInput.value = "";
+    elSearchWrap.classList.remove("has-text");
+    state.openDrinkKey = null;
+    renderApp();
+  });
+
+  elSearchInput.addEventListener("input", function(){
+    state.searchTerm = elSearchInput.value.trim();
+    elSearchWrap.classList.toggle("has-text", state.searchTerm.length > 0);
+    state.openDrinkKey = null;
+    renderApp();
+  });
+
+  elSearchClear.addEventListener("click", function(){
+    elSearchInput.value = "";
+    state.searchTerm = "";
+    elSearchWrap.classList.remove("has-text");
+    renderApp();
+    elSearchInput.focus();
+  });
+
+  elMain.addEventListener("click", function(e){
+    var retryBanner = e.target.closest("#retryFromBanner");
+    var retryError = e.target.closest("#retryFromError");
+    if (retryBanner || retryError){
+      fetchLive(false);
+      return;
+    }
+
+    var variantBtn = e.target.closest(".variant-toggle button");
+    if (variantBtn){
+      var wrap = variantBtn.closest(".variant-toggle");
+      var dKey = wrap.getAttribute("data-drink");
+      state.selectedVariant[dKey] = variantBtn.getAttribute("data-variant");
+      renderApp();
+      return;
+    }
+
+    var head = e.target.closest(".drink-head");
+    if (head){
+      var key = head.getAttribute("data-toggle");
+      state.openDrinkKey = (state.openDrinkKey === key) ? null : key;
+      renderApp();
+      return;
+    }
+  });
+
+  elRefreshBtn.addEventListener("click", function(){
+    fetchLive(true);
+  });
+
+  // ---- boot -------------------------------------------------------------
+  fetchLive(false);
+})();
+</script>
+</body>
+</html>
